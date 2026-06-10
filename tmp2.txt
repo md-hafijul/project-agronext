@@ -1,0 +1,11 @@
+260:        setDoc(doc(db, "singletons", "metrics"), next);
+1871:                        setDoc(doc(db, "singletons", "metrics"), metrics);
+1986:                          setDoc(doc(db, "singletons", "metrics"), newMetrics);
+2061:                        setDoc(doc(db, "singletons", "metrics"), metrics);
+3465:                                setDoc(doc(db, "singletons", "metrics"), nextMetrics);
+3769:                                           setDoc(doc(db, "singletons", "metrics"), updatedMetrics);
+3994:                                       setDoc(doc(db, "singletons", "metrics"), newMetrics);
+4026:                                             setDoc(doc(db, "singletons", "metrics"), newMetrics);
+4270:                             setDoc(doc(db, "singletons", "metrics"), newMetrics);
+4938:                        await setDoc(doc(db, "singletons", "metrics"), resetMetrics);
+5119:                        await setDoc(doc(db, "singletons", "metrics"), backupData.metrics);

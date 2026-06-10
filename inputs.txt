@@ -1,0 +1,171 @@
+827:                      <input 
+828-                        type="text" 
+829-                        placeholder="Search inventory..." 
+--
+936:                       <input 
+937-                         type="number" 
+938-                         value={metrics.salary} 
+--
+954:                       <input 
+955-                         type="number" 
+956-                         value={metrics.orderCount} 
+--
+964:                       <input 
+965-                         type="number" 
+966-                         value={metrics.employeeCount} 
+--
+998:                       <input 
+999-                         type="date"
+1000-                         value={dailyDate}
+--
+1007:                       <input 
+1008-                         type="number" 
+1009-                         value={dailyCost}
+--
+1016:                       <input 
+1017-                         type="number" 
+1018-                         value={dailyEarning}
+--
+1087:                           <input 
+1088-                             type="number" 
+1089-                             value={metrics.monthlyData[selectedMonthIndex]?.cost ?? 0} 
+--
+1100:                           <input 
+1101-                             type="number" 
+1102-                             value={metrics.monthlyData[selectedMonthIndex]?.earning ?? 0} 
+--
+1137:                    <input 
+1138-                      type="text" placeholder="Product Name" 
+1139-                      value={newProduct.name} onChange={e => setNewProduct({...newProduct, name: e.target.value})}
+--
+1142:                    <input 
+1143-                      type="text" placeholder="Category" 
+1144-                      value={newProduct.category} onChange={e => setNewProduct({...newProduct, category: e.target.value})}
+--
+1147:                    <input 
+1148-                      type="text" placeholder="Price (e.g. ৳1,450)" 
+1149-                      value={newProduct.price} onChange={e => setNewProduct({...newProduct, price: e.target.value})}
+--
+1153:                      <input 
+1154-                        type="text" placeholder="Image URL (optional)" 
+1155-                        value={newProduct.image} onChange={e => setNewProduct({...newProduct, image: e.target.value})}
+--
+1158:                      <input 
+1159-                        type="file" accept="image/*"
+1160-                        onChange={e => {
+--
+1209:                                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+1210-                                        const file = e.target.files?.[0];
+1211-                                        if(file) {
+--
+1221:                                   <input 
+1222-                                     type="text" 
+1223-                                     value={item.name}
+--
+1227:                                   <input
+1228-                                     type="text"
+1229-                                     value={item.image}
+--
+1240:                                 <input 
+1241-                                   type="text" 
+1242-                                   value={item.price}
+--
+1250:                                 <input 
+1251-                                   type="text" 
+1252-                                   value={item.stock}
+--
+1309:                    <input 
+1310-                      type="text" placeholder="Name" 
+1311-                      value={newEmployee.name} onChange={e => setNewEmployee({...newEmployee, name: e.target.value})}
+--
+1314:                    <input 
+1315-                      type="text" placeholder="Phone Number" 
+1316-                      value={newEmployee.phone} onChange={e => setNewEmployee({...newEmployee, phone: e.target.value})}
+--
+1319:                    <input 
+1320-                      type="text" placeholder="Role" 
+1321-                      value={newEmployee.role} onChange={e => setNewEmployee({...newEmployee, role: e.target.value})}
+--
+1324:                    <input 
+1325-                      type="number" placeholder="Salary" 
+1326-                      value={newEmployee.salary || ""} onChange={e => setNewEmployee({...newEmployee, salary: Number(e.target.value)})}
+--
+1360:                              <input 
+1361-                                type="text"
+1362-                                value={emp.name}
+--
+1372:                              <input 
+1373-                                type="text"
+1374-                                value={emp.phone}
+--
+1384:                              <input 
+1385-                                type="text"
+1386-                                value={emp.role}
+--
+1397:                              <input 
+1398-                                type="number"
+1399-                                value={emp.salary}
+--
+1461:                          <input 
+1462-                            type="text" 
+1463-                            value={loginUsername}
+--
+1485:                          <input 
+1486-                            type={showLoginPassword ? "text" : "password"}
+1487-                            value={loginPassword}
+--
+1538:                              <input 
+1539-                                type="text" 
+1540-                                value={forgotUsername}
+--
+1568:                              <input 
+1569-                                type="text" 
+1570-                                maxLength={4}
+--
+1597:                              <input 
+1598-                                type={showLoginPassword ? "text" : "password"}
+1599-                                value={forgotNewPassword}
+--
+1667:                      <input 
+1668-                        type="text" 
+1669-                        value={signupName}
+--
+1676:                      <input 
+1677-                        type="text" 
+1678-                        value={signupNumber}
+--
+1685:                      <input 
+1686-                        type="text" 
+1687-                        value={signupUsername}
+--
+1694:                      <input 
+1695-                        type={showSignupPassword ? "text" : "password"}
+1696-                        value={signupPassword}
+--
+1710:                      <input 
+1711-                        type={showSignupPassword ? "text" : "password"}
+1712-                        value={signupConfirm}
+--
+1779:                      <input 
+1780-                        type="text" 
+1781-                        value={currentUser.name}
+--
+1792:                      <input 
+1793-                        type="text" 
+1794-                        value={currentUser.number}
+--
+1805:                      <input 
+1806-                        type="text" 
+1807-                        value={currentUser.username}
+--
+1947:                        <input 
+1948-                          type="text" 
+1949-                          value={companyLogo || ""}
+--
+1970:                        <input 
+1971-                          type="file" 
+1972-                          accept="image/*"
+--
+2034:                <input 
+2035-                  type="number" 
+2036-                  min="1"

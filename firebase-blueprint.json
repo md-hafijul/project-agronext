@@ -1,0 +1,87 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number" },
+        "name": { "type": "string" },
+        "number": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["id", "name", "number", "username", "password", "role"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "An employee",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string" },
+        "salary": { "type": "number" }
+      },
+      "required": ["id", "name", "phone", "role", "salary"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "A product",
+      "type": "object",
+      "properties": {
+        "id": { "type": "number" },
+        "name": { "type": "string" },
+        "price": { "type": "string" },
+        "unit": { "type": "string" },
+        "category": { "type": "string" },
+        "stock": { "type": "string" },
+        "image": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "unit", "category", "stock", "image"]
+    },
+    "Metrics": {
+      "title": "Metrics",
+      "description": "Financial metrics",
+      "type": "object",
+      "properties": {
+        "revenue": { "type": "number" },
+        "cost": { "type": "number" },
+        "salary": { "type": "number" },
+        "orderCount": { "type": "number" },
+        "employeeCount": { "type": "number" },
+        "earning": { "type": "number" }
+      },
+      "required": ["revenue", "cost", "salary", "orderCount", "employeeCount", "earning"]
+    },
+    "PlatformSettings": {
+      "title": "Platform Settings",
+      "description": "Global platform settings",
+      "type": "object",
+      "properties": {
+        "companyLogo": { "type": "string" }
+      },
+      "required": ["companyLogo"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "User collection for login and registration. Note: Anyone can read right now since we are doing custom auth."
+    },
+    "employees": {
+      "schema": "Employee",
+      "description": "Company employees"
+    },
+    "inventory": {
+      "schema": "Product",
+      "description": "Available products"
+    },
+    "singletons": {
+      "schema": "Metrics",
+      "description": "Only holds the metrics and settings document"
+    }
+  }
+}

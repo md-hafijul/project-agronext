@@ -1,0 +1,201 @@
+3394:            {activeTab === "orders" && currentUser && currentUser.status !== "pending" && (currentUser.role === "admin" || currentUser.role === "employee") && (
+3395-              <motion.div 
+3396-                key="orders"
+3397-                initial={{ opacity: 0, scale: 0.95 }}
+3398-                animate={{ opacity: 1, scale: 1 }}
+3399-                exit={{ opacity: 0, scale: 0.98 }}
+3400-                className="space-y-12 pb-20"
+3401-              >
+3402-                <div className="flex flex-col gap-4 py-8 lg:flex-row lg:items-center lg:justify-between">
+3403-                  <div>
+3404-                    <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">History</h2>
+3405-                    <p className="mt-2 text-lg text-slate-500">View past sales and restock activities.</p>
+3406-                  </div>
+3407-                </div>
+3408-
+3409-                <div className="flex flex-wrap items-center gap-3 justify-end mb-4">
+3410-                       <div className="flex items-center gap-2">
+3411-                         <input 
+3412-                           type="date"
+3413-                           value={orderStartDate}
+3414-                           onChange={e => setOrderStartDate(e.target.value)}
+3415-                           className="rounded-full border border-slate-200 bg-white py-2 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-700"
+3416-                         />
+3417-                         <span className="text-slate-400 font-medium">to</span>
+3418-                         <input 
+3419-                           type="date"
+3420-                           value={orderEndDate}
+3421-                           onChange={e => setOrderEndDate(e.target.value)}
+3422-                           className="rounded-full border border-slate-200 bg-white py-2 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-700"
+3423-                         />
+3424-                       </div>
+3425-                       <div className="relative">
+3426-                         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+3427-                         <input 
+3428-                           type="text" 
+3429-                           value={orderSearchTerm}
+3430-                           onChange={e => setOrderSearchTerm(e.target.value)}
+3431-                           placeholder="Search history by ID, product, user..." 
+3432-                           className="w-full sm:w-64 rounded-full border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+3433-                         />
+3434-                       </div>
+3435-                       <span className="flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-700 whitespace-nowrap">
+3436-                         <Package className="h-4 w-4" /> {orders.length} Records
+3437-                       </span>
+3438-                    </div>
+3439-
+3440-                <div className="rounded-[3rem] bg-white shadow-sm ring-1 ring-slate-100 overflow-hidden">
+3441-                  <div className="overflow-x-auto p-4 sm:p-10">
+3442-                    <table className="w-full text-left responsive-table">
+3443-                      <thead>
+3444-                        <tr className="border-b border-slate-200 text-sm font-bold uppercase tracking-wider text-slate-400">
+3445-                          <th className="pb-4 pt-2">ID</th>
+3446-                          <th className="pb-4 pt-2">Date & Time</th>
+3447-                          <th className="pb-4 pt-2">Type</th>
+3448-                          <th className="pb-4 pt-2">User / Purchaser</th>
+3449-                          <th className="pb-4 pt-2">Product</th>
+3450-                          <th className="pb-4 pt-2">Quantity</th>
+3451-                          <th className="pb-4 pt-2 text-right">Amount</th>
+3452-                          <th className="pb-4 pt-2 text-center">Docs</th>
+3453-                          {currentUser && currentUser.role === "admin" && (
+3454-                             <th className="pb-4 pt-2 text-right">Actions</th>
+3455-                          )}
+3456-                        </tr>
+3457-                      </thead>
+3458-                      <tbody className="divide-y divide-slate-100">
+3459-                        {orders.length > 0 ? orders.filter(order => {
+3460-                          let searchMatch = true;
+3461-                          if (orderSearchTerm) {
+3462-                            const term = orderSearchTerm.toLowerCase();
+3463-                            searchMatch = order.id.toString().includes(term) || order.productName.toLowerCase().includes(term) || (order.userName && order.userName.toLowerCase().includes(term));
+3464-                          }
+3465-                          let dateMatch = true;
+3466-                          if (orderStartDate) {
+3467-                            dateMatch = dateMatch && new Date(order.timestamp) >= new Date(orderStartDate);
+3468-                          }
+3469-                          if (orderEndDate) {
+3470-                             const endDate = new Date(orderEndDate);
+3471-                             endDate.setHours(23, 59, 59, 999);
+3472-                             dateMatch = dateMatch && new Date(order.timestamp) <= endDate;
+3473-                          }
+3474-                          return searchMatch && dateMatch;
+3475-                        }).map((order, idx) => (
+3476-                          <tr key={`order-row-${order._docId || order.id}-${idx}`} className={cn("transition-colors", order.type === "restock" ? "bg-red-50 hover:bg-red-100 outline outline-2 outline-red-200" : "bg-green-50 hover:bg-green-100 outline outline-2 outline-green-200")}>
+3477-                            <td className="py-4 px-2">
+3478-                              <span className="font-mono text-sm font-bold text-slate-500">#{order.id}</span>
+3479-                            </td>
+3480-                            <td className="py-4">
+3481-                              <span className="text-sm font-medium text-slate-900 block">
+3482-                                {new Date(order.timestamp).toLocaleString()}
+3483-                              </span>
+3484-                              {order.completionTime && (
+3485-                                <span className={cn("text-xs font-bold mt-1 block", order.status === "cancelled" ? "text-rose-500" : "text-emerald-500")}>
+3486-                                  {order.status === "cancelled" ? "Cancelled: " : "Completed: "}
+3487-                                  {new Date(order.completionTime).toLocaleString()}
+3488-                                </span>
+3489-                              )}
+3490-                            </td>
+3491-                            {order.status === "cancelled" ? (
+3492-                               <td colSpan={currentUser && currentUser.role === "admin" ? 6 : 5} className="py-4 text-center">
+3493-                                  <span className="text-sm uppercase font-bold text-rose-600 bg-rose-100 px-3 py-1.5 rounded-full block text-center w-full max-w-md mx-auto">
+3494-                                    This delivery has been cancelled by admin
+3495-                                  </span>
+3496-                               </td>
+3497-                            ) : (
+3498-                               <>
+3499-                            <td className="py-4">
+3500-                              <span className={cn("text-xs font-bold uppercase tracking-wider", order.type === "restock" ? "text-red-600" : "text-green-600")}>
+3501-                                {order.type === "restock" ? "Restock" : order.type === "wholesale" ? "Wholesale" : "Sale"}
+3502-                              </span>
+3503-                            </td>
+3504-                            <td className="py-4">
+3505-                              <span className="text-sm font-medium text-slate-700 block">{order.userName || "Unknown"}</span>
+3506-                              {order.purchaserName && (
+3507-                                <span className="text-xs font-bold text-slate-500 block">Purchaser: {order.purchaserName}</span>
+3508-                              )}
+3509-                              {order.type === "wholesale" && order.shopInfo?.name && (
+3510-                                <span className="flex items-center gap-1 mt-1 text-xs font-bold text-indigo-500">
+3511-                                  {order.shopInfo?.image && (
+3512-                                    <img src={order.shopInfo.image} className="w-5 h-5 rounded object-cover" alt="Shop" />
+3513-                                  )}
+3514-                                  Shop: {order.shopInfo.name}
+3515-                                </span>
+3516-                              )}
+3517-                            </td>
+3518-                            <td className="py-4">
+3519-                              {order.cartItems && order.cartItems.length > 1 ? (
+3520-                                <div className="flex flex-col gap-1">
+3521-                                  <span className="text-sm font-bold text-slate-900 block">{order.productName}</span>
+3522-                                  <div className="flex flex-col">
+3523-                                     {order.cartItems.map((item: any, idxx: number) => (
+3524-                                        <span key={idxx} className="text-[11px] text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-sm">
+3525-                                           • {item.productName} x{item.quantity} {item.sellType} (৳{item.totalPrice.toLocaleString()})
+3526-                                        </span>
+3527-                                     ))}
+3528-                                  </div>
+3529-                                </div>
+3530-                              ) : (
+3531-                                <span className="text-sm font-bold text-slate-900 block">{order.productName}</span>
+3532-                              )}
+3533-                              {order.source && (
+3534-                                <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded mr-1">
+3535-                                  {order.source}
+3536-                                </span>
+3537-                              )}
+3538-                              {order.status === "cancelled" && orderSearchTerm && orderSearchTerm.includes(order.id.toString()) && (
+3539-                                <span className="text-[10px] uppercase font-bold text-rose-600 bg-rose-100 px-1 py-0.5 rounded mt-1 block">
+3540-                                  This delivery has been cancelled by admin
+3541-                                </span>
+3542-                              )}
+3543-                            </td>
+3544-                            <td className="py-4">
+3545-                              <span className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold text-slate-700" style={{ backgroundColor: 'var(--theme-card-ring)' }}>
+3546-                                {order.cartItems && order.cartItems.length > 1 ? `${order.cartItems.length} Products` : `${order.quantity}`}
+3547-                              </span>
+3548-                            </td>
+3549-                            <td className="py-4 text-right">
+3550-                              <span className={cn("text-sm font-bold", order.type === "restock" ? "text-red-600" : "text-green-600")}>
+3551-                                {order.type === "restock" ? "-" : "+"}৳{Number(order.totalPrice).toLocaleString()}
+3552-                              </span>
+3553-                            </td>
+3554-                            <td className="py-4 text-center">
+3555-                              {order.fileId ? (
+3556-                                <a href={`https://drive.google.com/open?id=${order.fileId}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 hover:underline">
+3557-                                  <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+3558-                                </a>
+3559-                              ) : (
+3560-                                <span className="text-slate-300">-</span>
+3561-                              )}
+3562-                            </td>
+3563-                            {currentUser && currentUser.role === "admin" && (
+3564-                               <td className="py-4 text-right">
+3565-                                 <button onClick={() => {
+3566-                                    customConfirm("Are you sure you want to cancel this history log?", () => {
+3567-                                       deleteDoc(doc(db, "orders", order.id.toString()));
+3568-
+3569-                                        // Update financial accounting metrics
+3570-                                        if (metrics) {
+3571-                                           let updatedMetrics = { ...metrics };
+3572-                                           const orderDate = order.timestamp ? order.timestamp.split('T')[0] : new Date().toISOString().split('T')[0];
+3573-                                           const orderMonth = order.timestamp ? new Date(order.timestamp).getMonth() : new Date().getMonth();
+3574-                                           
+3575-                                           let newMonthlyData = updatedMetrics.monthlyData ? [...updatedMetrics.monthlyData] : [];
+3576-                                           let newDailyData = updatedMetrics.dailyData ? [...updatedMetrics.dailyData] : [];
+3577-
+3578-                                           if (order.type === "sale") {
+3579-                                              if (newMonthlyData[orderMonth]) {
+3580-                                                 newMonthlyData[orderMonth].earning = Math.max(0, (newMonthlyData[orderMonth].earning || 0) - Number(order.totalPrice));
+3581-                                              }
+3582-                                              const dailyIdx = newDailyData.findIndex((d: any) => d.date === orderDate);
+3583-                                              if (dailyIdx >= 0) {
+3584-                                                 newDailyData[dailyIdx].earning = Math.max(0, (newDailyData[dailyIdx].earning || 0) - Number(order.totalPrice));
+3585-                                              }
+3586-                                              updatedMetrics.orderCount = Math.max(0, (updatedMetrics.orderCount || 0) - 1);
+3587-                                           } else {
+3588-                                              if (newMonthlyData[orderMonth]) {
+3589-                                                 newMonthlyData[orderMonth].cost = Math.max(0, (newMonthlyData[orderMonth].cost || 0) - Number(order.totalPrice));
+3590-                                              }
+3591-                                              const dailyIdx = newDailyData.findIndex((d: any) => d.date === orderDate);
+3592-                                              if (dailyIdx >= 0) {
+3593-                                                 newDailyData[dailyIdx].cost = Math.max(0, (newDailyData[dailyIdx].cost || 0) - Number(order.totalPrice));
+3594-                                              }

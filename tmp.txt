@@ -1,0 +1,380 @@
+146-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+147-  const [isAccountantMode, setIsAccountantMode] = useState(false);
+148-  const [autoCalculateEarnings, setAutoCalculateEarnings] = useState(true);
+149-
+150-  // General App State
+151:  const [users, setUsers] = useState<any[]>([]);
+152-  const [shops, setShops] = useState<any[]>([]);
+153-  const [passwordRequests, setPasswordRequests] = useState<any[]>([]);
+154-  const [currentUser, setCurrentUser] = useState<any>(() => {
+155-    const saved = localStorage.getItem("agronext_currentUser");
+156-    if (saved) return JSON.parse(saved);
+--
+433-  useEffect(() => {
+434-    const unsubShops = onSnapshot(collection(db, "shops"), (snapshot) => {
+435-      setShops(snapshot.docs.map(d => ({id: d.id, ...d.data()})));
+436-    });
+437-
+438:    const unsubUsers = onSnapshot(collection(db, "users"), (snapshot) => {
+439-      let data = snapshot.docs.map(d => d.data()) as any[];
+440-      const defaultAdmins = [
+441-        { id: 1, name: "Hafijul", number: "01711000000", username: "haf1j", password: "agronext.me", role: "admin", status: "approved" },
+442-        { id: 2, name: "Hasan", number: "01811000000", username: "hasan", password: "agronext.me", role: "admin", status: "approved" }
+443-      ];
+444-
+445-      defaultAdmins.forEach(admin => {
+446-        const foundIdx = data.findIndex(u => u.username === admin.username);
+447-        if (foundIdx === -1) {
+448-          data.push(admin);
+449:          setDoc(doc(db, "users", admin.id.toString()), admin);
+450-        } else {
+451-          const existing = data[foundIdx];
+452-          if (existing.role !== "admin" || existing.status !== "approved") {
+453-            const updated = { ...existing, role: "admin", status: "approved" };
+454-            data[foundIdx] = updated;
+455:            setDoc(doc(db, "users", existing.id.toString()), updated);
+456-          }
+457-        }
+458-      });
+459-      setUsers(data);
+460-    });
+--
+547-  }, []);
+548-
+549-  useEffect(() => { 
+550-    if (currentUser) {
+551-       localStorage.setItem("agronext_currentUser", JSON.stringify(currentUser));
+552:       const freshUser = users.find(u => u.id === currentUser.id);
+553-       if (freshUser && JSON.stringify(freshUser) !== JSON.stringify(currentUser)) {
+554-         setCurrentUser(freshUser);
+555-       }
+556-    } else {
+557-      localStorage.removeItem("agronext_currentUser");
+558-    }
+559:  }, [currentUser, users]);
+560-
+561-  useEffect(() => {
+562-    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+563-    if (!link) {
+564-      link = document.createElement('link');
+--
+1563-                        </div>
+1564-                        <div className="mt-auto pt-8">
+1565-                           <button 
+1566-                             onClick={() => {
+1567-                                if (!currentUser) {
+1568:                                  alert("Guest users are not allowed to make a sell. Please sign in or register to place an order.");
+1569-                                  setActiveTab("login");
+1570-                                  return;
+1571-                                }
+1572-                                const isAdmin = currentUser.role === "admin";
+1573-                                const isSR = currentUser.role?.toLowerCase().includes("sr") || currentUser.jobTitle?.toLowerCase().includes("sr");
+--
+1966-                  </div>
+1967-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+1968-                    <select 
+1969-                      value={newEmployee.name} 
+1970-                      onChange={e => {
+1971:                        const u = users.find(x => x.id.toString() === e.target.value);
+1972-                        if (u) {
+1973-                          setNewEmployee({ name: u.id.toString(), phone: u.number, role: u.jobTitle || "", salary: u.salary || 0 });
+1974-                        } else {
+1975-                          setNewEmployee({...newEmployee, name: ""});
+1976-                        }
+1977-                      }}
+1978-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-green-500"
+1979-                    >
+1980-                      <option value="">Select an Approved User...</option>
+1981:                      {users.filter(u => u.status === "approved" && u.role === "user").map(u => (
+1982-                        <option key={u.id} value={u.id}>{u.name} ({u.number})</option>
+1983-                      ))}
+1984-                    </select>
+1985-                    <input 
+1986-                      type="text" placeholder="Phone Number (Auto-filled)" 
+--
+2001-                  </div>
+2002-                  <button 
+2003-                    onClick={() => {
+2004-                      if(newEmployee.name) {
+2005-                        const targetUserId = newEmployee.name;
+2006:                        const u = users.find(x => x.id.toString() === targetUserId);
+2007-                        if (u) {
+2008-                          const updatedUser = { ...u, role: "employee", jobTitle: newEmployee.role, salary: newEmployee.salary };
+2009:                          setDoc(doc(db, "users", u.id.toString()), updatedUser);
+2010-                          setNewEmployee({ name: "", phone: "", role: "", salary: 0 });
+2011-                        }
+2012-                      }
+2013-                    }}
+2014-                    className="flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-bold text-white hover:bg-slate-800 transition-all active:scale-95"
+--
+2028-                          <th className="pb-4 pt-2">Salary</th>
+2029-                          <th className="pb-4 pt-2 text-right">Actions</th>
+2030-                        </tr>
+2031-                      </thead>
+2032-                      <tbody className="divide-y divide-slate-100">
+2033:                        {users.filter(u => u.role === "employee" || u.role === "admin").map(emp => (
+2034-                          <tr key={emp.id} className="group">
+2035-                            <td className="py-4 font-bold text-slate-900">{emp.name}</td>
+2036-                            <td className="py-4 font-medium text-slate-500">{emp.number}</td>
+2037-                            <td className="py-4">
+2038-                              <input 
+2039-                                type="text"
+2040-                                placeholder="Edit title..."
+2041-                                value={emp.jobTitle || ""}
+2042-                                onChange={e => {
+2043-                                   const newEmp = { ...emp, jobTitle: e.target.value };
+2044:                                   setDoc(doc(db, "users", emp.id.toString()), newEmp);
+2045-                                }}
+2046-                                className="w-full bg-transparent font-medium text-slate-500 outline-none border-b border-transparent focus:border-green-500"
+2047-                              />
+2048-                            </td>
+2049-                            <td className="py-4 flex items-center gap-1 font-bold text-green-600">
+--
+2052-                                type="number"
+2053-                                placeholder="0"
+2054-                                value={emp.salary || ""}
+2055-                                onChange={e => {
+2056-                                   const newEmp = { ...emp, salary: Number(e.target.value) };
+2057:                                   setDoc(doc(db, "users", emp.id.toString()), newEmp);
+2058-                                }}
+2059-                                className="w-24 bg-transparent outline-none border-b border-transparent focus:border-green-500"
+2060-                              />
+2061-                            </td>
+2062-                            <td className="py-4 text-right">
+--
+2065-                                  if (emp.username === "haf1j" || emp.username === "hasan") {
+2066-                                    alert("Cannot downgrade primary admin.");
+2067-                                    return;
+2068-                                  }
+2069-                                  const updatedUser = { ...emp, role: "user" };
+2070:                                  setDoc(doc(db, "users", emp.id.toString()), updatedUser);
+2071-                                }}
+2072-                                className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors inline-flex opacity-0 group-hover:opacity-100 disabled:opacity-0"
+2073-                                title="Downgrade to User"
+2074-                              >
+2075-                                <Trash2 className="h-4 w-4" />
+--
+2155-                            {showLoginPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+2156-                          </button>
+2157-                        </div>
+2158-                        <button 
+2159-                          onClick={() => {
+2160:                            const user = users.find(u => u.username === loginUsername && u.password === loginPassword);
+2161-                            if (user) {
+2162-                              if (user.status === "pending") {
+2163-                                setErrorMsg("Please ask the admin to approve your user request.");
+2164-                                return;
+2165-                              }
+--
+2209-                                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-green-500"
+2210-                              />
+2211-                            </div>
+2212-                            <button 
+2213-                              onClick={() => {
+2214:                                const user = users.find(u => u.username === forgotUsername);
+2215-                                if (user) {
+2216-                                  setErrorMsg("");
+2217-                                  setForgotPasswordStep(2);
+2218-                                } else {
+2219-                                  setErrorMsg("Username not found");
+--
+2231-                            <div className="rounded-2xl bg-amber-50 p-4 border border-amber-100 text-amber-800 font-medium">
+2232-                              <p>Please click confirm and ask the admin for your password then log in and change your password.</p>
+2233-                            </div>
+2234-                            <button 
+2235-                              onClick={() => {
+2236:                                const targetUser = users.find(u => u.username === forgotUsername);
+2237-                                if (targetUser) {
+2238-                                  const requestId = Date.now().toString();
+2239-                                  setDoc(doc(db, "password_requests", requestId), {
+2240-                                    id: requestId,
+2241-                                    userId: targetUser.id,
+--
+2345-                        }
+2346-                        if (signupPassword !== signupConfirm) {
+2347-                          setErrorMsg("Passwords do not match");
+2348-                          return;
+2349-                        }
+2350:                        if (users.find(u => u.username === signupUsername)) {
+2351-                          setErrorMsg("Username already exists");
+2352-                          return;
+2353-                        }
+2354-                        const newUser = { id: Date.now(), name: signupName, number: signupNumber, username: signupUsername, password: signupPassword, role: "user", status: "pending" };
+2355:                        setDoc(doc(db, "users", newUser.id.toString()), newUser);
+2356-                        setSignupName("");
+2357-                        setSignupNumber("");
+2358-                        setSignupUsername("");
+2359-                        setSignupPassword("");
+2360-                        setSignupConfirm("");
+--
+2403-                      <input 
+2404-                        type="text" 
+2405-                        value={currentUser.name}
+2406-                        onChange={e => {
+2407-                          const newName = e.target.value;
+2408:                          setUsers(users.map(u => u.id === currentUser.id ? { ...u, name: newName } : u));
+2409-                          setCurrentUser({ ...currentUser, name: newName });
+2410-                        }}
+2411-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-green-500"
+2412-                      />
+2413-                    </div>
+--
+2416-                      <input 
+2417-                        type="text" 
+2418-                        value={currentUser.number}
+2419-                        onChange={e => {
+2420-                          const newNumber = e.target.value;
+2421:                          setUsers(users.map(u => u.id === currentUser.id ? { ...u, number: newNumber } : u));
+2422-                          setCurrentUser({ ...currentUser, number: newNumber });
+2423-                        }}
+2424-                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 font-medium outline-none focus:ring-2 focus:ring-green-500"
+2425-                      />
+2426-                    </div>
+--
+2435-                      <p className="mt-2 text-xs text-slate-400 font-medium">Username cannot be changed after registration.</p>
+2436-                    </div>
+2437-                    <div className="pt-4 flex justify-end border-b border-slate-100 pb-6">
+2438-                      <button 
+2439-                        onClick={() => {
+2440:                          setDoc(doc(db, "users", currentUser.id.toString()), currentUser);
+2441-                          alert("Profile updated successfully!");
+2442-                        }}
+2443-                        className="flex items-center gap-2 rounded-2xl bg-green-600 px-8 py-3 font-bold text-white shadow-xl shadow-green-100 hover:bg-green-700 transition-all active:scale-95"
+2444-                      >
+2445-                        <CheckCircle2 className="h-5 w-5" /> Save Changes
+--
+2488-                              if (profileNewPassword !== profileConfirmPassword) {
+2489-                                alert("Passwords do not match.");
+2490-                                return;
+2491-                              }
+2492-                              const updatedUser = { ...currentUser, password: profileNewPassword };
+2493:                              setDoc(doc(db, "users", currentUser.id.toString()), updatedUser);
+2494-                              setProfileNewPassword("");
+2495-                              setProfileConfirmPassword("");
+2496-                              setCurrentUser(updatedUser);
+2497-                              alert("Password changed successfully!");
+2498-                            }}
+--
+2535-                          <th className="pb-4 pt-2">Phone</th>
+2536-                          <th className="pb-4 pt-2 text-right">Actions</th>
+2537-                        </tr>
+2538-                      </thead>
+2539-                      <tbody className="divide-y divide-slate-100">
+2540:                        {users.filter(u => u.status === "pending").map(u => (
+2541-                          <tr key={u.id} className="group">
+2542-                            <td className="py-4 font-bold text-slate-900">{u.name}</td>
+2543-                            <td className="py-4 font-medium text-slate-500">@{u.username}</td>
+2544-                            <td className="py-4 font-medium text-slate-500">
+2545-                               <a 
+--
+2553-                            <td className="py-4 text-right">
+2554-                              <div className="flex items-center justify-end gap-2">
+2555-                                <button 
+2556-                                  onClick={() => {
+2557-                                    const updatedUser = { ...u, status: "approved", role: "user" };
+2558:                                    setDoc(doc(db, "users", u.id.toString()), updatedUser);
+2559-                                  }}
+2560-                                  className="px-3 py-2 text-sm font-bold text-green-700 bg-green-100 hover:bg-green-200 rounded-xl transition-colors"
+2561-                                >
+2562-                                  Approve as User
+2563-                                </button>
+2564-                                <button 
+2565-                                  onClick={() => {
+2566-                                    const updatedUser = { ...u, status: "approved", role: "employee" };
+2567:                                    setDoc(doc(db, "users", u.id.toString()), updatedUser);
+2568-                                  }}
+2569-                                  className="px-3 py-2 text-sm font-bold text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-xl transition-colors"
+2570-                                >
+2571-                                  Approve as Employee
+2572-                                </button>
+2573-                                <button 
+2574-                                  onClick={() => {
+2575:                                    deleteDoc(doc(db, "users", u.id.toString()));
+2576-                                  }}
+2577-                                  className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors inline-flex"
+2578-                                  title="Reject & Delete"
+2579-                                >
+2580-                                  <Trash2 className="h-4 w-4" />
+2581-                                </button>
+2582-                              </div>
+2583-                            </td>
+2584-                          </tr>
+2585-                        ))}
+2586:                        {users.filter(u => u.status === "pending").length === 0 && (
+2587-                          <tr>
+2588-                            <td colSpan={4} className="py-8 text-center text-slate-500 font-medium">
+2589-                              No pending signups.
+2590-                            </td>
+2591-                          </tr>
+--
+2609-                          <th className="pb-4 pt-2 text-right">Actions</th>
+2610-                        </tr>
+2611-                      </thead>
+2612-                      <tbody className="divide-y divide-slate-100">
+2613-                        {passwordRequests.map(req => {
+2614:                          const reqUser = users.find(u => u.id === req.userId);
+2615-                          return (
+2616-                            <tr key={req.id} className="group">
+2617-                              <td className="py-4 font-bold text-slate-900">@{req.username}</td>
+2618-                              <td className="py-4 font-medium text-slate-500">{new Date(req.timestamp).toLocaleString()}</td>
+2619-                              <td className="py-4 text-right">
+--
+2659-
+2660-                <div className="rounded-[3rem] bg-white p-10 shadow-sm ring-1 ring-slate-100">
+2661-                  <div className="mb-8 flex items-center justify-between border-b border-slate-100 pb-6">
+2662-                    <div>
+2663-                      <h3 className="text-2xl font-bold text-slate-900">User Management</h3>
+2664:                      <p className="text-slate-500 mt-1">Manage registered users, employees, and administrators.</p>
+2665-                    </div>
+2666-                  </div>
+2667-
+2668-                  <div className="overflow-x-auto">
+2669-                    <table className="w-full text-left">
+--
+2675-                          <th className="pb-4 pt-2">Role</th>
+2676-                          <th className="pb-4 pt-2 text-right">Actions</th>
+2677-                        </tr>
+2678-                      </thead>
+2679-                      <tbody className="divide-y divide-slate-100">
+2680:                        {users.filter(u => u.status === "approved").map(u => (
+2681-                          <tr key={u.id} className="group">
+2682-                            <td className="py-4 font-bold text-slate-900">
+2683-                              {u.name}
+2684-                              {currentUser && currentUser.id === u.id && (
+2685-                                <span className="ml-2 inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-bold text-green-700 ring-1 ring-inset ring-green-600/20">
+--
+2712-                                  if (currentUser && currentUser.id === u.id) {
+2713-                                    alert("You cannot remove your own admin privileges.");
+2714-                                    return;
+2715-                                  }
+2716-                                  const updatedUser = { ...u, role: u.role === "admin" ? "user" : "admin" };
+2717:                                  setDoc(doc(db, "users", u.id.toString()), updatedUser);
+2718-                                }}
+2719-                                disabled={u.username === "haf1j" || u.username === "hasan" || (currentUser && currentUser.id === u.id)}
+2720-                                className={cn(
+2721-                                  "p-2 rounded-lg transition-colors inline-flex disabled:opacity-50 disabled:cursor-not-allowed",
+2722-                                  u.role === "admin" ? "text-rose-600 hover:bg-rose-50" : "text-blue-600 hover:bg-blue-50"
+--
+2754-                        className="w-full flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 font-medium text-slate-700 outline-none focus:ring-2 focus:ring-green-500 shadow-sm" 
+2755-                        onChange={(e) => {
+2756-                          const val = e.target.value;
+2757-                          if (!val) return;
+2758-                          
+2759:                          const u = users.find(u => u.username === val);
+2760:                          if(u) setDoc(doc(db, "users", u.id.toString()), { ...u, role: "admin", status: "approved" });
+2761-                          e.target.value = "";
+2762-                        }}
+2763-                      >
+2764-                        <option value="">Choose a user...</option>
+2765-                        <optgroup label="Employees">
+2766:                          {users.filter(u => u.role === "employee" && u.status === "approved").map(u => (
+2767-                            <option key={'u-'+u.id} value={u.username}>{u.name} (Employee) - @{u.username}</option>
+2768-                          ))}
+2769-                        </optgroup>
+2770-                        <optgroup label="Standard Users">
+2771:                          {users.filter(u => u.role === "user" && u.status === "approved").map(u => (
+2772-                            <option key={'u-'+u.id} value={u.username}>{u.name} (User) - @{u.username}</option>
+2773-                          ))}
+2774-                        </optgroup>
+2775-                      </select>
+2776-                    </div>

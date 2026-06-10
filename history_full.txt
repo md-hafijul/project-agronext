@@ -1,0 +1,271 @@
+{activeTab === "orders" && currentUser && currentUser.status !== "pending" && (currentUser.role === "admin" || currentUser.role === "employee") && (
+              <motion.div 
+                key="orders"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                className="space-y-12 pb-20"
+              >
+                <div className="flex flex-col gap-4 py-8 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">History</h2>
+                    <p className="mt-2 text-lg text-slate-500">View past sales and restock activities.</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 justify-end mb-4">
+                       <div className="flex items-center gap-2">
+                         <input 
+                           type="date"
+                           value={orderStartDate}
+                           onChange={e => setOrderStartDate(e.target.value)}
+                           className="rounded-full border border-slate-200 bg-white py-2 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-700"
+                         />
+                         <span className="text-slate-400 font-medium">to</span>
+                         <input 
+                           type="date"
+                           value={orderEndDate}
+                           onChange={e => setOrderEndDate(e.target.value)}
+                           className="rounded-full border border-slate-200 bg-white py-2 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-slate-700"
+                         />
+                       </div>
+                       <div className="relative">
+                         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                         <input 
+                           type="text" 
+                           value={orderSearchTerm}
+                           onChange={e => setOrderSearchTerm(e.target.value)}
+                           placeholder="Search history by ID, product, user..." 
+                           className="w-full sm:w-64 rounded-full border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium"
+                         />
+                       </div>
+                       <span className="flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-bold text-blue-700 whitespace-nowrap">
+                         <Package className="h-4 w-4" /> {orders.length} Records
+                       </span>
+                    </div>
+
+                <div className="rounded-[3rem] bg-white shadow-sm ring-1 ring-slate-100 overflow-hidden">
+                  <div className="overflow-x-auto p-4 sm:p-10">
+                    <table className="w-full text-left responsive-table">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-sm font-bold uppercase tracking-wider text-slate-400">
+                          <th className="pb-4 pt-2">ID</th>
+                          <th className="pb-4 pt-2">Date & Time</th>
+                          <th className="pb-4 pt-2">Type</th>
+                          <th className="pb-4 pt-2">User / Purchaser</th>
+                          <th className="pb-4 pt-2">Product</th>
+                          <th className="pb-4 pt-2">Quantity</th>
+                          <th className="pb-4 pt-2 text-right">Amount</th>
+                          <th className="pb-4 pt-2 text-center">Docs</th>
+                          {currentUser && currentUser.role === "admin" && (
+                             <th className="pb-4 pt-2 text-right">Actions</th>
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {orders.length > 0 ? orders.filter(order => {
+                          let searchMatch = true;
+                          if (orderSearchTerm) {
+                            const term = orderSearchTerm.toLowerCase();
+                            searchMatch = order.id.toString().includes(term) || order.productName.toLowerCase().includes(term) || (order.userName && order.userName.toLowerCase().includes(term));
+                          }
+                          let dateMatch = true;
+                          if (orderStartDate) {
+                            dateMatch = dateMatch && new Date(order.timestamp) >= new Date(orderStartDate);
+                          }
+                          if (orderEndDate) {
+                             const endDate = new Date(orderEndDate);
+                             endDate.setHours(23, 59, 59, 999);
+                             dateMatch = dateMatch && new Date(order.timestamp) <= endDate;
+                          }
+                          return searchMatch && dateMatch;
+                        }).map((order, idx) => (
+                          <tr key={`order-row-${order._docId || order.id}-${idx}`} className={cn("transition-colors", order.type === "restock" ? "bg-red-50 hover:bg-red-100 outline outline-2 outline-red-200" : "bg-green-50 hover:bg-green-100 outline outline-2 outline-green-200")}>
+                            <td className="py-4 px-2">
+                              <span className="font-mono text-sm font-bold text-slate-500">#{order.id}</span>
+                            </td>
+                            <td className="py-4">
+                              <span className="text-sm font-medium text-slate-900 block">
+                                {new Date(order.timestamp).toLocaleString()}
+                              </span>
+                              {order.completionTime && (
+                                <span className={cn("text-xs font-bold mt-1 block", order.status === "cancelled" ? "text-rose-500" : "text-emerald-500")}>
+                                  {order.status === "cancelled" ? "Cancelled: " : "Completed: "}
+                                  {new Date(order.completionTime).toLocaleString()}
+                                </span>
+                              )}
+                            </td>
+                            {order.status === "cancelled" ? (
+                               <td colSpan={currentUser && currentUser.role === "admin" ? 6 : 5} className="py-4 text-center">
+                                  <span className="text-sm uppercase font-bold text-rose-600 bg-rose-100 px-3 py-1.5 rounded-full block text-center w-full max-w-md mx-auto">
+                                    This delivery has been cancelled by admin
+                                  </span>
+                               </td>
+                            ) : (
+                               <>
+                            <td className="py-4">
+                              <span className={cn("text-xs font-bold uppercase tracking-wider", order.type === "restock" ? "text-red-600" : "text-green-600")}>
+                                {order.type === "restock" ? "Restock" : order.type === "wholesale" ? "Wholesale" : "Sale"}
+                              </span>
+                            </td>
+                            <td className="py-4">
+                              <span className="text-sm font-medium text-slate-700 block">{order.userName || "Unknown"}</span>
+                              {order.purchaserName && (
+                                <span className="text-xs font-bold text-slate-500 block">Purchaser: {order.purchaserName}</span>
+                              )}
+                              {order.type === "wholesale" && order.shopInfo?.name && (
+                                <span className="flex items-center gap-1 mt-1 text-xs font-bold text-indigo-500">
+                                  {order.shopInfo?.image && (
+                                    <img src={order.shopInfo.image} className="w-5 h-5 rounded object-cover" alt="Shop" />
+                                  )}
+                                  Shop: {order.shopInfo.name}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-4">
+                              {order.cartItems && order.cartItems.length > 1 ? (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-sm font-bold text-slate-900 block">{order.productName}</span>
+                                  <div className="flex flex-col">
+                                     {order.cartItems.map((item: any, idxx: number) => (
+                                        <span key={idxx} className="text-[11px] text-slate-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-sm">
+                                           • {item.productName} x{item.quantity} {item.sellType} (৳{item.totalPrice.toLocaleString()})
+                                        </span>
+                                     ))}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-sm font-bold text-slate-900 block">{order.productName}</span>
+                              )}
+                              {order.source && (
+                                <span className="text-[10px] uppercase font-bold text-slate-400 bg-slate-100 px-1 py-0.5 rounded mr-1">
+                                  {order.source}
+                                </span>
+                              )}
+                              {order.status === "cancelled" && orderSearchTerm && orderSearchTerm.includes(order.id.toString()) && (
+                                <span className="text-[10px] uppercase font-bold text-rose-600 bg-rose-100 px-1 py-0.5 rounded mt-1 block">
+                                  This delivery has been cancelled by admin
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-4">
+                              <span className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-bold text-slate-700" style={{ backgroundColor: 'var(--theme-card-ring)' }}>
+                                {order.cartItems && order.cartItems.length > 1 ? `${order.cartItems.length} Products` : `${order.quantity}`}
+                              </span>
+                            </td>
+                            <td className="py-4 text-right">
+                              <span className={cn("text-sm font-bold", order.type === "restock" ? "text-red-600" : "text-green-600")}>
+                                {order.type === "restock" ? "-" : "+"}৳{Number(order.totalPrice).toLocaleString()}
+                              </span>
+                            </td>
+                            <td className="py-4 text-center">
+                              {order.fileId ? (
+                                <a href={`https://drive.google.com/open?id=${order.fileId}`} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700 hover:underline">
+                                  <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                </a>
+                              ) : (
+                                <span className="text-slate-300">-</span>
+                              )}
+                            </td>
+                            {currentUser && currentUser.role === "admin" && (
+                               <td className="py-4 text-right">
+                                 <button onClick={() => {
+                                    customConfirm("Are you sure you want to cancel this history log?", () => {
+                                       deleteDoc(doc(db, "orders", order.id.toString()));
+
+                                        // Update financial accounting metrics
+                                        if (metrics) {
+                                           let updatedMetrics = { ...metrics };
+                                           const orderDate = order.timestamp ? order.timestamp.split('T')[0] : new Date().toISOString().split('T')[0];
+                                           const orderMonth = order.timestamp ? new Date(order.timestamp).getMonth() : new Date().getMonth();
+                                           
+                                           let newMonthlyData = updatedMetrics.monthlyData ? [...updatedMetrics.monthlyData] : [];
+                                           let newDailyData = updatedMetrics.dailyData ? [...updatedMetrics.dailyData] : [];
+
+                                           if (order.type === "sale") {
+                                              if (newMonthlyData[orderMonth]) {
+                                                 newMonthlyData[orderMonth].earning = Math.max(0, (newMonthlyData[orderMonth].earning || 0) - Number(order.totalPrice));
+                                              }
+                                              const dailyIdx = newDailyData.findIndex((d: any) => d.date === orderDate);
+                                              if (dailyIdx >= 0) {
+                                                 newDailyData[dailyIdx].earning = Math.max(0, (newDailyData[dailyIdx].earning || 0) - Number(order.totalPrice));
+                                              }
+                                              updatedMetrics.orderCount = Math.max(0, (updatedMetrics.orderCount || 0) - 1);
+                                           } else {
+                                              if (newMonthlyData[orderMonth]) {
+                                                 newMonthlyData[orderMonth].cost = Math.max(0, (newMonthlyData[orderMonth].cost || 0) - Number(order.totalPrice));
+                                              }
+                                              const dailyIdx = newDailyData.findIndex((d: any) => d.date === orderDate);
+                                              if (dailyIdx >= 0) {
+                                                 newDailyData[dailyIdx].cost = Math.max(0, (newDailyData[dailyIdx].cost || 0) - Number(order.totalPrice));
+                                              }
+                                           }
+
+                                           if (order.type === "restock") {
+                                              const dependentSales = orders.filter(o => o.productId === order.productId && o.type === "sale" && new Date(o.timestamp) > new Date(order.timestamp));
+                                              dependentSales.forEach(sale => {
+                                                 const saleDate = sale.timestamp ? sale.timestamp.split('T')[0] : new Date().toISOString().split('T')[0];
+                                                 const saleMonth = sale.timestamp ? new Date(sale.timestamp).getMonth() : new Date().getMonth();
+
+                                                 if (newMonthlyData[saleMonth]) {
+                                                    newMonthlyData[saleMonth].earning = Math.max(0, (newMonthlyData[saleMonth].earning || 0) - Number(sale.totalPrice));
+                                                 }
+                                                 const saleDailyIdx = newDailyData.findIndex((d: any) => d.date === saleDate);
+                                                 if (saleDailyIdx >= 0) {
+                                                    newDailyData[saleDailyIdx].earning = Math.max(0, (newDailyData[saleDailyIdx].earning || 0) - Number(sale.totalPrice));
+                                                 }
+                                                 updatedMetrics.orderCount = Math.max(0, (updatedMetrics.orderCount || 0) - 1);
+                                              });
+                                           }
+
+                                           updatedMetrics.monthlyData = newMonthlyData;
+                                           updatedMetrics.dailyData = newDailyData;
+                                           
+                                           if (autoCalculateEarnings) {
+                                              updatedMetrics.revenue = newMonthlyData.reduce((acc: number, d: any) => acc + (d.earning || 0), 0) || 0;
+                                              updatedMetrics.cost = newMonthlyData.reduce((acc: number, d: any) => acc + (d.cost || 0), 0) || 0;
+                                              updatedMetrics.earning = updatedMetrics.revenue - updatedMetrics.cost - (updatedMetrics.salary || 0);
+                                           }
+                                           setMetrics(updatedMetrics);
+                                           setDoc(doc(db, "singletons", "metrics"), updatedMetrics);
+                                        }
+                                       const product = inventory.find(p => p.id === order.productId);
+                                       if (product) {
+                                          let newStockNum = 0;
+                                          let salesCancelledQty = 0;
+                                          if (order.type === "restock") {
+                                             const dependentSales = orders.filter(o => o.productId === order.productId && o.type === "sale" && new Date(o.timestamp) > new Date(order.timestamp));
+                                             dependentSales.forEach(sale => {
+                                                deleteDoc(doc(db, "orders", sale.id.toString()));
+                                                salesCancelledQty += Number(sale.quantity);
+                                             });
+                                          }
+                                          const currentStockMatch = product.stock ? product.stock.match(/[0-9]+/) : null;
+                                          if (currentStockMatch) {
+                                            const currentStockNum = Number(currentStockMatch[0]);
+                                            if (order.type === "sale") {
+                                               newStockNum = currentStockNum + Number(order.quantity);
+                                            } else {
+                                               newStockNum = Math.max(0, currentStockNum - Number(order.quantity) + salesCancelledQty);
+                                            }
+                                            const newStockStr = product.stock.replace(/[0-9]+/, newStockNum.toString());
+                                            setDoc(doc(db, "inventory", product.id.toString()), { ...product, stock: newStockStr });
+                                          }
+                                       }
+                                    });
+                                 }} className="text-xs text-rose-500 hover:text-rose-700 font-bold underline">Cancel</button>
+                               </td>
+                            )}
+                            </>
+                          )}
+                          </tr>
+                        )) : (
+                          <tr>
+                            <td colSpan={8} className="py-12 text-center text-slate-500 font-medium">
+                               No history found.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+      
